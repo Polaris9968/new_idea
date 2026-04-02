@@ -61,6 +61,10 @@ function toggleAuth(showRegister) {
     document.getElementById('auth-title').innerText = showRegister ? "注册新账号" : "网站测试";
     document.getElementById('forgot-form').classList.add('hidden');
     refreshCaptcha(showRegister ? 'reg' : 'login');
+    // 重置登录模式为密码登录
+    if (!showRegister) {
+        toggleLoginMode('pwd');
+    }
 }
 
 function showForgotPassword() {
@@ -77,6 +81,8 @@ function showForgotPassword() {
     document.getElementById('forgot-new-pwd1').value = '';
     document.getElementById('forgot-new-pwd2').value = '';
     document.querySelectorAll('#forgot-form .error-msg').forEach(el => el.innerText = '');
+    // 重置登录模式为密码登录
+    toggleLoginMode('pwd');
 }
 
 function showLogin() {
@@ -84,6 +90,133 @@ function showLogin() {
     document.getElementById('register-form').classList.add('hidden');
     document.getElementById('forgot-form').classList.add('hidden');
     document.getElementById('auth-title').innerText = "网站测试";
+    // 重置登录模式为密码登录
+    toggleLoginMode('pwd');
+}
+
+/* --- 登录模式切换 --- */
+function toggleLoginMode(mode) {
+    const pwdBtn = document.getElementById('pwd-login-btn');
+    const codeBtn = document.getElementById('code-login-btn');
+    const pwdSection = document.getElementById('pwd-login-section');
+    const codeSection = document.getElementById('code-login-section');
+    const captchaSection = document.getElementById('login-captcha-section');
+
+    if (mode === 'pwd') {
+        pwdBtn.classList.replace('bg-gray-200', 'bg-primary');
+        pwdBtn.classList.replace('text-gray-700', 'text-white');
+        codeBtn.classList.replace('bg-primary', 'bg-gray-200');
+        codeBtn.classList.replace('text-white', 'text-gray-700');
+        pwdBtn.classList.add('dark:text-white');
+        codeBtn.classList.remove('dark:text-white');
+        pwdSection.classList.remove('hidden');
+        codeSection.classList.add('hidden');
+        captchaSection.classList.remove('hidden');
+        document.getElementById('login-btn').innerText = '登录';
+        document.getElementById('login-btn').setAttribute('onclick', 'handleLogin()');
+    } else {
+        codeBtn.classList.replace('bg-gray-200', 'bg-primary');
+        codeBtn.classList.replace('text-gray-700', 'text-white');
+        pwdBtn.classList.replace('bg-primary', 'bg-gray-200');
+        pwdBtn.classList.replace('text-white', 'text-gray-700');
+        codeBtn.classList.add('dark:text-white');
+        pwdBtn.classList.remove('dark:text-white');
+        pwdSection.classList.add('hidden');
+        codeSection.classList.remove('hidden');
+        captchaSection.classList.add('hidden');
+        document.getElementById('login-btn').innerText = '验证码登录';
+        document.getElementById('login-btn').setAttribute('onclick', 'handleCodeLogin()');
+    }
+    // 清空输入和错误提示
+    clearLoginInputs();
+}
+
+function clearLoginInputs() {
+    document.getElementById('login-id').value = '';
+    document.getElementById('login-pwd').value = '';
+    document.getElementById('login-captcha').value = '';
+    document.getElementById('code-login-email').value = '';
+    document.getElementById('code-login-email').disabled = false;
+    document.getElementById('code-login-code').value = '';
+    document.getElementById('send-login-code-btn').disabled = false;
+    document.getElementById('send-login-code-btn').innerText = '发送验证码';
+    document.querySelectorAll('#login-form .error-msg').forEach(el => el.innerText = '');
+}
+
+/* --- 验证码登录 --- */
+let loginCodeEmail = '';
+
+function sendLoginCode() {
+    const email = document.getElementById('code-login-email').value.trim();
+    const errEl = document.getElementById('code-login-email-err');
+
+    errEl.innerText = "";
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errEl.innerText = "请输入正确的邮箱格式";
+        return;
+    }
+
+    const user = users.find(u => u.email === email);
+    if (!user) {
+        errEl.innerText = "该邮箱未注册";
+        return;
+    }
+
+    // 生成6位验证码
+    const code = generateCaptcha(6);
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+
+    localStorage.setItem('login_code', JSON.stringify({ code, email, expiresAt }));
+
+    // 禁用按钮
+    document.getElementById('send-login-code-btn').disabled = true;
+    document.getElementById('send-login-code-btn').innerText = '验证码已发送';
+
+    // 发送邮件
+    emailjs.send("my_gmail_service", "template_kvawjm9", {
+        to_email: email,
+        code: code,
+        time: "15分钟"
+    }).then(function() {
+        document.getElementById('code-login-email').disabled = true;
+        loginCodeEmail = email;
+        alert('验证码已发送至您的邮箱。');
+    }).catch(function(error) {
+        document.getElementById('send-login-code-btn').disabled = false;
+        document.getElementById('send-login-code-btn').innerText = '发送验证码';
+        alert('邮件发送失败，请稍后重试。');
+        console.error('EmailJS 错误:', error);
+    });
+}
+
+function handleCodeLogin() {
+    const code = document.getElementById('code-login-code').value.trim();
+    const codeErr = document.getElementById('code-login-code-err');
+
+    codeErr.innerText = "";
+
+    // 验证验证码
+    const stored = JSON.parse(localStorage.getItem('login_code') || '{}');
+    if (!stored.code || Date.now() > stored.expiresAt) {
+        codeErr.innerText = "验证码已过期，请重新获取";
+        return;
+    }
+    if (code !== stored.code) {
+        codeErr.innerText = "验证码错误";
+        return;
+    }
+
+    // 查找用户并登录
+    const user = users.find(u => u.email === loginCodeEmail);
+    if (user) {
+        localStorage.removeItem('login_code');
+        console.log("验证码登录成功:", user.username);
+        if (typeof initUserSession === "function") {
+            initUserSession(user);
+        }
+    }
 }
 
 /* --- 忘记密码 --- */
@@ -95,8 +228,13 @@ function sendResetCode() {
 
     errEl.innerText = "";
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
         errEl.innerText = "请输入邮箱";
+        return;
+    }
+    if (!emailRegex.test(email)) {
+        errEl.innerText = "请输入正确的邮箱格式";
         return;
     }
 
@@ -210,8 +348,9 @@ function handleRegister() {
         isValid = false;
     }
 
-    if (!email.includes('@')) {
-        document.getElementById('err-email').innerText = "请输入正确邮箱格式";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        document.getElementById('err-email').innerText = "请输入正确的邮箱格式";
         isValid = false;
     } else if (users.some(u => u.email === email)) {
         document.getElementById('err-email').innerText = "该邮箱已被注册";

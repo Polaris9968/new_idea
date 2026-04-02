@@ -35,20 +35,44 @@
 
             <!-- 登录表单 -->
             <div id="login-form" class="space-y-4">
-                <div>
-                    <input type="text" id="login-id" placeholder="邮箱或用户名" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
-                    <span class="error-msg text-danger text-xs mt-1" id="login-err"></span>
+                <!-- 登录模式切换 -->
+                <div class="flex mb-2">
+                    <button id="pwd-login-btn" onclick="toggleLoginMode('pwd')" class="flex-1 py-2 bg-primary text-white rounded-l-lg text-sm font-medium">密码登录</button>
+                    <button id="code-login-btn" onclick="toggleLoginMode('code')" class="flex-1 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-r-lg text-sm font-medium">验证码登录</button>
                 </div>
-                <div>
-                    <input type="password" id="login-pwd" placeholder="密码" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+
+                <!-- 密码登录区域 -->
+                <div id="pwd-login-section">
+                    <div>
+                        <input type="text" id="login-id" placeholder="邮箱或用户名" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <span class="error-msg text-danger text-xs mt-1" id="login-err"></span>
+                    </div>
+                    <div class="mt-3">
+                        <input type="password" id="login-pwd" placeholder="密码" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
                 </div>
-                <!-- 验证码 -->
-                <div class="flex gap-2">
+
+                <!-- 验证码登录区域 -->
+                <div id="code-login-section" class="hidden">
+                    <div>
+                        <input type="text" id="code-login-email" placeholder="邮箱" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <span class="error-msg text-danger text-xs mt-1" id="code-login-email-err"></span>
+                        <button onclick="sendLoginCode()" id="send-login-code-btn" class="w-full py-2 mt-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium">发送验证码</button>
+                    </div>
+                    <div class="mt-3">
+                        <input type="text" id="code-login-code" placeholder="6位验证码" maxlength="6" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <span class="error-msg text-danger text-xs mt-1" id="code-login-code-err"></span>
+                    </div>
+                </div>
+
+                <!-- 图形验证码（仅密码登录显示） -->
+                <div id="login-captcha-section" class="flex gap-2">
                     <input type="text" id="login-captcha" placeholder="验证码" maxlength="4" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
                     <canvas id="login-captcha-canvas" width="80" height="40" class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600" onclick="refreshCaptcha('login')"></canvas>
                 </div>
                 <span class="error-msg text-danger text-xs" id="login-captcha-err"></span>
-                <button onclick="handleLogin()" class="w-full py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">登录</button>
+
+                <button onclick="handleLogin()" id="login-btn" class="w-full py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">登录</button>
                 <div class="text-center">
                     <span class="text-gray-500 dark:text-gray-400 text-sm">没有账号？</span>
                     <span onclick="toggleAuth(true)" class="text-primary cursor-pointer hover:underline text-sm">注册新账号</span>
