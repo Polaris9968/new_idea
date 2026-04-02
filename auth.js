@@ -2,6 +2,9 @@
 const ADMIN_CONF = { email: "111111@111.com", username: "111", password: "11111111" };
 let users = JSON.parse(localStorage.getItem('local_users')) || [ADMIN_CONF];
 
+/* --- EmailJS 初始化 --- */
+emailjs.init("B1OgUNazK08MicUTZ");
+
 /* --- 验证码系统 --- */
 const captchas = {};
 
@@ -110,19 +113,21 @@ function sendResetCode() {
     // 保存到localStorage（临时）
     localStorage.setItem('reset_code', JSON.stringify({ code, email, expiresAt }));
 
+    // 禁用按钮防止重复点击
+    document.getElementById('send-code-btn').disabled = true;
+
     // 发送邮件
-    emailjs.init("B1OgUNazK08MicUTZ");
     emailjs.send("my_gmail_service", "template_kvawjm9", {
         to_email: email,
         code: code,
         time: "15分钟"
-    }).then(function() {
+    }).then(function(response) {
         document.getElementById('forgot-email').disabled = true;
-        document.getElementById('send-code-btn').disabled = true;
         document.getElementById('send-code-btn').innerText = '验证码已发送';
         alert('验证码已发送至您的邮箱。');
         resetEmail = email;
     }).catch(function(error) {
+        document.getElementById('send-code-btn').disabled = false;
         alert('邮件发送失败，请稍后重试。\n错误信息：' + JSON.stringify(error));
         console.error('EmailJS 错误:', error);
     });
