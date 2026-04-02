@@ -104,14 +104,15 @@ function sendResetCode() {
     localStorage.setItem('reset_code', JSON.stringify({ code, email, expiresAt }));
 
     // TODO: 替换为你的 EmailJS 密钥
-    // emailjs.init("B1OgUNazK08MicUTZ");
-    // emailjs.send("my_gmail_service", "template_kvawjm9", {
-    //     to_email: email,
-    //     code: code
-    // });
+    emailjs.init("B1OgUNazK08MicUTZ");
+    emailjs.send("my_gmail_service", "template_kvawjm9", {
+        to_email: email,
+        code: code,
+        time: "15分钟"
+    });
 
     // 模拟发送成功（显示验证码）
-    alert('验证码已发送至您的邮箱。\n\n演示模式：您的验证码是 ' + code + '\n（实际项目中邮件已发送）');
+    alert('验证码已发送至您的邮箱。');
 
     document.getElementById('forgot-step1').classList.add('hidden');
     document.getElementById('forgot-step2').classList.remove('hidden');
