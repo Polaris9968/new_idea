@@ -1,85 +1,172 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>网站测试</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4a90e2',
+                        danger: '#ff4d4f',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
 
-    <section id="auth-section">
-        <div class="auth-container">
-            <h2 id="auth-title">网站测试</h2>
-            
-            <div id="login-form">
-                <div class="input-group">
-                    <input type="text" id="login-id" placeholder="邮箱或用户名">
-                    <span class="error-msg" id="login-err"></span>
+    <!-- 认证区域：登录/注册/忘记密码 -->
+    <section id="auth-section" class="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <!-- 背景图 -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://picsum.photos/1920/1080?random=1" class="w-full h-full object-cover opacity-30 dark:opacity-20">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-gray-800 dark:to-gray-900"></div>
+        </div>
+
+        <div class="relative z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-96">
+            <h2 id="auth-title" class="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-white">网站测试</h2>
+
+            <!-- 登录表单 -->
+            <div id="login-form" class="space-y-4">
+                <div>
+                    <input type="text" id="login-id" placeholder="邮箱或用户名" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="login-err"></span>
                 </div>
-                <div class="input-group">
-                    <input type="password" id="login-pwd" placeholder="密码">
+                <div>
+                    <input type="password" id="login-pwd" placeholder="密码" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
-                <button onclick="handleLogin()">登录</button>
-                <div class="switch-link">没有账号？<span onclick="toggleAuth(true)">注册新账号</span></div>
+                <!-- 验证码 -->
+                <div class="flex gap-2">
+                    <input type="text" id="login-captcha" placeholder="验证码" maxlength="4" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <canvas id="login-captcha-canvas" width="80" height="40" class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600" onclick="refreshCaptcha('login')"></canvas>
+                </div>
+                <span class="error-msg text-danger text-xs" id="login-captcha-err"></span>
+                <button onclick="handleLogin()" class="w-full py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">登录</button>
+                <div class="text-center">
+                    <span class="text-gray-500 dark:text-gray-400 text-sm">没有账号？</span>
+                    <span onclick="toggleAuth(true)" class="text-primary cursor-pointer hover:underline text-sm">注册新账号</span>
+                </div>
+                <div class="text-center">
+                    <span onclick="showForgotPassword()" class="text-gray-500 dark:text-gray-400 text-sm cursor-pointer hover:text-primary hover:underline">忘记密码？</span>
+                </div>
             </div>
 
-            <div id="register-form" class="hidden">
-                <div class="input-group">
-                    <input type="text" id="reg-user" placeholder="用户名">
-                    <span class="error-msg" id="err-user"></span>
+            <!-- 注册表单 -->
+            <div id="register-form" class="hidden space-y-4">
+                <div>
+                    <input type="text" id="reg-user" placeholder="用户名" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="err-user"></span>
                 </div>
-                <div class="input-group">
-                    <input type="text" id="reg-email" placeholder="邮箱">
-                    <span class="error-msg" id="err-email"></span>
+                <div>
+                    <input type="text" id="reg-email" placeholder="邮箱" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="err-email"></span>
                 </div>
-                <div class="input-group">
-                    <input type="password" id="reg-pwd1" placeholder="设置密码 (至少8位)">
-                    <span class="error-msg" id="err-pwd1"></span>
+                <div>
+                    <input type="password" id="reg-pwd1" placeholder="设置密码 (至少8位)" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="err-pwd1"></span>
                 </div>
-                <div class="input-group">
-                    <input type="password" id="reg-pwd2" placeholder="确认密码">
-                    <span class="error-msg" id="err-pwd2"></span>
+                <div>
+                    <input type="password" id="reg-pwd2" placeholder="确认密码" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="err-pwd2"></span>
                 </div>
-                <button onclick="handleRegister()">立即注册</button>
-                <div class="switch-link">已有账号？<span onclick="toggleAuth(false)">返回登录</span></div>
+                <!-- 验证码 -->
+                <div class="flex gap-2">
+                    <input type="text" id="reg-captcha" placeholder="验证码" maxlength="4" class="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <canvas id="reg-captcha-canvas" width="80" height="40" class="cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600" onclick="refreshCaptcha('reg')"></canvas>
+                </div>
+                <span class="error-msg text-danger text-xs" id="reg-captcha-err"></span>
+                <button onclick="handleRegister()" class="w-full py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">立即注册</button>
+                <div class="text-center">
+                    <span class="text-gray-500 dark:text-gray-400 text-sm">已有账号？</span>
+                    <span onclick="toggleAuth(false)" class="text-primary cursor-pointer hover:underline text-sm">返回登录</span>
+                </div>
+            </div>
+
+            <!-- 忘记密码表单 -->
+            <div id="forgot-form" class="hidden space-y-4">
+                <div id="forgot-step1">
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">输入您的注册邮箱，我们会发送验证码到您的邮箱。</p>
+                    <input type="text" id="forgot-email" placeholder="邮箱" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="forgot-email-err"></span>
+                    <button onclick="sendResetCode()" class="w-full py-3 mt-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">发送验证码</button>
+                </div>
+                <div id="forgot-step2" class="hidden">
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">请查收邮件，输入验证码并设置新密码。</p>
+                    <input type="text" id="forgot-code" placeholder="验证码" maxlength="6" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="forgot-code-err"></span>
+                    <input type="password" id="forgot-new-pwd1" placeholder="新密码 (至少8位)" class="w-full px-4 py-3 mt-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="forgot-pwd1-err"></span>
+                    <input type="password" id="forgot-new-pwd2" placeholder="确认新密码" class="w-full px-4 py-3 mt-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <span class="error-msg text-danger text-xs mt-1" id="forgot-pwd2-err"></span>
+                    <button onclick="resetPassword()" class="w-full py-3 mt-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">重置密码</button>
+                </div>
+                <div class="text-center">
+                    <span onclick="showLogin()" class="text-primary cursor-pointer hover:underline text-sm">返回登录</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <main id="main-system" class="hidden">
-        <aside id="sidebar">
-            <div class="nav-item active" onclick="switchTab('home')">主页面</div>
-            <div class="nav-item" onclick="switchTab('discover')">发现</div>
-            <div class="nav-item" onclick="switchTab('profile')">我的</div>
-            <div id="admin-menu" class="nav-item admin-only hidden" onclick="switchTab('admin')">用户数据</div>
+    <!-- 主系统 -->
+    <main id="main-system" class="hidden flex min-h-screen">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="w-56 bg-gray-900 text-white flex flex-col">
+            <div class="p-4 text-center text-xl font-bold border-b border-gray-700">网站测试</div>
+            <nav class="flex-1 py-4">
+                <div class="nav-item px-6 py-3 cursor-pointer hover:bg-blue-600 transition-colors" onclick="switchTab('home')">主页面</div>
+                <div class="nav-item px-6 py-3 cursor-pointer hover:bg-blue-600 transition-colors" onclick="switchTab('discover')">发现</div>
+                <div class="nav-item px-6 py-3 cursor-pointer hover:bg-blue-600 transition-colors" onclick="switchTab('profile')">我的</div>
+                <div id="admin-menu" class="nav-item admin-only hidden px-6 py-3 cursor-pointer hover:bg-blue-600 transition-colors" onclick="switchTab('admin')">用户数据</div>
+            </nav>
+            <div class="p-4 border-t border-gray-700">
+                <button id="theme-toggle" onclick="toggleTheme()" class="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <span id="theme-icon">☀️</span>
+                    <span id="theme-text">切换主题</span>
+                </button>
+            </div>
         </aside>
 
-        <section id="content">
+        <!-- 内容区 -->
+        <section id="content" class="flex-1 p-8 bg-white dark:bg-gray-800 overflow-y-auto">
+            <!-- 主页 -->
             <div id="page-home" class="page">
-                <h1>主页</h1>
-                <p>欢迎来到网站测试系统。</p>
+                <h1 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">主页</h1>
+                <p class="text-gray-600 dark:text-gray-300">欢迎来到网站测试系统。</p>
             </div>
+            <!-- 发现页 -->
             <div id="page-discover" class="page hidden">
-                <h1>发现</h1>
-                <p>内容建设中...</p>
+                <h1 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">发现</h1>
+                <p class="text-gray-600 dark:text-gray-300">内容建设中...</p>
             </div>
+            <!-- 我的页面 -->
             <div id="page-profile" class="page hidden">
-                <div class="info-card">
-                    <h2>个人信息</h2>
-                    <p><strong>用户名：</strong><span id="display-username"></span></p>
-                    <p><strong>邮箱：</strong><span id="display-email"></span></p>
-                    <hr>
-                    <button class="btn-logout" onclick="handleLogout()">退出登录</button>
+                <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl max-w-md">
+                    <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">个人信息</h2>
+                    <p class="text-gray-700 dark:text-gray-200 mb-2"><strong>用户名：</strong><span id="display-username"></span></p>
+                    <p class="text-gray-700 dark:text-gray-200 mb-4"><strong>邮箱：</strong><span id="display-email"></span></p>
+                    <hr class="border-gray-300 dark:border-gray-600 mb-4">
+                    <button onclick="handleLogout()" class="w-full py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors mb-2">退出登录</button>
+                    <button onclick="handleDeleteAccount()" class="w-full py-2 bg-danger text-white rounded-lg hover:bg-red-600 transition-colors">注销账号</button>
                 </div>
             </div>
+            <!-- 管理面板 -->
             <div id="page-admin" class="page hidden">
-                <h1>管理面板</h1>
-                <table>
+                <h1 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">管理面板</h1>
+                <table class="w-full border-collapse">
                     <thead>
-                        <tr><th>用户名</th><th>邮箱</th></tr>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th class="text-left p-3 border-b border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200">用户名</th>
+                            <th class="text-left p-3 border-b border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200">邮箱</th>
+                        </tr>
                     </thead>
-                    <tbody id="user-table-body"></tbody>
+                    <tbody id="user-table-body" class="text-gray-700 dark:text-gray-300"></tbody>
                 </table>
             </div>
         </section>
@@ -87,5 +174,13 @@
 
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script>
+        // 初始化验证码
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            refreshCaptcha('login');
+            refreshCaptcha('reg');
+        });
+    </script>
 </body>
 </html>
