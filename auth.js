@@ -103,20 +103,21 @@ function sendResetCode() {
     // 保存到localStorage（临时）
     localStorage.setItem('reset_code', JSON.stringify({ code, email, expiresAt }));
 
-    // TODO: 替换为你的 EmailJS 密钥
+    // 发送邮件
     emailjs.init("B1OgUNazK08MicUTZ");
     emailjs.send("my_gmail_service", "template_kvawjm9", {
         to_email: email,
         code: code,
         time: "15分钟"
+    }).then(function() {
+        alert('验证码已发送至您的邮箱。');
+        document.getElementById('forgot-step1').classList.add('hidden');
+        document.getElementById('forgot-step2').classList.remove('hidden');
+        resetEmail = email;
+    }).catch(function(error) {
+        alert('邮件发送失败，请稍后重试。\n错误信息：' + JSON.stringify(error));
+        console.error('EmailJS 错误:', error);
     });
-
-    // 模拟发送成功（显示验证码）
-    alert('验证码已发送至您的邮箱。');
-
-    document.getElementById('forgot-step1').classList.add('hidden');
-    document.getElementById('forgot-step2').classList.remove('hidden');
-    resetEmail = email;
 }
 
 function resetPassword() {
