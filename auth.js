@@ -64,9 +64,16 @@ function showForgotPassword() {
     document.getElementById('login-form').classList.add('hidden');
     document.getElementById('register-form').classList.add('hidden');
     document.getElementById('forgot-form').classList.remove('hidden');
-    document.getElementById('forgot-step1').classList.remove('hidden');
-    document.getElementById('forgot-step2').classList.add('hidden');
     document.getElementById('auth-title').innerText = "忘记密码";
+    // 重置表单状态
+    document.getElementById('forgot-email').value = '';
+    document.getElementById('forgot-email').disabled = false;
+    document.getElementById('send-code-btn').disabled = false;
+    document.getElementById('send-code-btn').innerText = '发送验证码';
+    document.getElementById('forgot-code').value = '';
+    document.getElementById('forgot-new-pwd1').value = '';
+    document.getElementById('forgot-new-pwd2').value = '';
+    document.querySelectorAll('#forgot-form .error-msg').forEach(el => el.innerText = '');
 }
 
 function showLogin() {
@@ -110,9 +117,10 @@ function sendResetCode() {
         code: code,
         time: "15分钟"
     }).then(function() {
+        document.getElementById('forgot-email').disabled = true;
+        document.getElementById('send-code-btn').disabled = true;
+        document.getElementById('send-code-btn').innerText = '验证码已发送';
         alert('验证码已发送至您的邮箱。');
-        document.getElementById('forgot-step1').classList.add('hidden');
-        document.getElementById('forgot-step2').classList.remove('hidden');
         resetEmail = email;
     }).catch(function(error) {
         alert('邮件发送失败，请稍后重试。\n错误信息：' + JSON.stringify(error));
@@ -158,6 +166,14 @@ function resetPassword() {
         localStorage.setItem('local_users', JSON.stringify(users));
         localStorage.removeItem('reset_code');
         alert('密码重置成功！');
+        // 清空所有输入框
+        document.getElementById('forgot-email').value = '';
+        document.getElementById('forgot-email').disabled = false;
+        document.getElementById('send-code-btn').disabled = false;
+        document.getElementById('send-code-btn').innerText = '发送验证码';
+        document.getElementById('forgot-code').value = '';
+        document.getElementById('forgot-new-pwd1').value = '';
+        document.getElementById('forgot-new-pwd2').value = '';
         showLogin();
     }
 }
