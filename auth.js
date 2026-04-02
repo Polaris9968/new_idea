@@ -103,27 +103,31 @@ function toggleLoginMode(mode) {
     const captchaSection = document.getElementById('login-captcha-section');
 
     if (mode === 'pwd') {
-        pwdBtn.classList.replace('bg-gray-200', 'bg-primary');
-        pwdBtn.classList.replace('text-gray-700', 'text-white');
-        codeBtn.classList.replace('bg-primary', 'bg-gray-200');
-        codeBtn.classList.replace('text-white', 'text-gray-700');
-        pwdBtn.classList.add('dark:text-white');
-        codeBtn.classList.remove('dark:text-white');
+        // 密码登录按钮激活（蓝色）
+        pwdBtn.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        pwdBtn.classList.add('bg-primary', 'text-white');
+        // 验证码登录按钮未激活（灰色）
+        codeBtn.classList.remove('bg-primary', 'text-white');
+        codeBtn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        // 显示/隐藏对应区域
         pwdSection.classList.remove('hidden');
         codeSection.classList.add('hidden');
         captchaSection.classList.remove('hidden');
+        // 修改登录按钮
         document.getElementById('login-btn').innerText = '登录';
         document.getElementById('login-btn').setAttribute('onclick', 'handleLogin()');
     } else {
-        codeBtn.classList.replace('bg-gray-200', 'bg-primary');
-        codeBtn.classList.replace('text-gray-700', 'text-white');
-        pwdBtn.classList.replace('bg-primary', 'bg-gray-200');
-        pwdBtn.classList.replace('text-white', 'text-gray-700');
-        codeBtn.classList.add('dark:text-white');
-        pwdBtn.classList.remove('dark:text-white');
+        // 验证码登录按钮激活（蓝色）
+        codeBtn.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        codeBtn.classList.add('bg-primary', 'text-white');
+        // 密码登录按钮未激活（灰色）
+        pwdBtn.classList.remove('bg-primary', 'text-white');
+        pwdBtn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        // 显示/隐藏对应区域
         pwdSection.classList.add('hidden');
         codeSection.classList.remove('hidden');
         captchaSection.classList.add('hidden');
+        // 修改登录按钮
         document.getElementById('login-btn').innerText = '验证码登录';
         document.getElementById('login-btn').setAttribute('onclick', 'handleCodeLogin()');
     }
@@ -138,8 +142,12 @@ function clearLoginInputs() {
     document.getElementById('code-login-email').value = '';
     document.getElementById('code-login-email').disabled = false;
     document.getElementById('code-login-code').value = '';
-    document.getElementById('send-login-code-btn').disabled = false;
-    document.getElementById('send-login-code-btn').innerText = '发送验证码';
+    // 重置发送验证码按钮
+    const sendBtn = document.getElementById('send-login-code-btn');
+    sendBtn.disabled = false;
+    sendBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+    sendBtn.classList.add('bg-primary', 'hover:bg-blue-600');
+    sendBtn.innerText = '发送验证码';
     document.querySelectorAll('#login-form .error-msg').forEach(el => el.innerText = '');
 }
 
@@ -170,9 +178,12 @@ function sendLoginCode() {
 
     localStorage.setItem('login_code', JSON.stringify({ code, email, expiresAt }));
 
-    // 禁用按钮
-    document.getElementById('send-login-code-btn').disabled = true;
-    document.getElementById('send-login-code-btn').innerText = '验证码已发送';
+    // 禁用按钮并变为灰色
+    const sendBtn = document.getElementById('send-login-code-btn');
+    sendBtn.disabled = true;
+    sendBtn.classList.remove('bg-primary', 'hover:bg-blue-600');
+    sendBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+    sendBtn.innerText = '验证码已发送';
 
     // 发送邮件
     emailjs.send("my_gmail_service", "template_kvawjm9", {
@@ -184,8 +195,11 @@ function sendLoginCode() {
         loginCodeEmail = email;
         alert('验证码已发送至您的邮箱。');
     }).catch(function(error) {
-        document.getElementById('send-login-code-btn').disabled = false;
-        document.getElementById('send-login-code-btn').innerText = '发送验证码';
+        const sendBtn = document.getElementById('send-login-code-btn');
+        sendBtn.disabled = false;
+        sendBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        sendBtn.classList.add('bg-primary', 'hover:bg-blue-600');
+        sendBtn.innerText = '发送验证码';
         alert('邮件发送失败，请稍后重试。');
         console.error('EmailJS 错误:', error);
     });
