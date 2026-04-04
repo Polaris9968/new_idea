@@ -21,7 +21,8 @@ enum class SortOrder { ASC, DESC };
 bool extractNumber(const std::string& str, double& num) {
     std::stringstream ss(str);
     ss >> num;
-    return !ss.fail() && !ss.eof();
+    // 只检查fail标志，eof()在成功读取最后一个数字后也为true，不能作为失败条件
+    return !ss.fail();
 }
 
 // 从文件读取所有数字
