@@ -119,3 +119,183 @@ function handleDeleteAccount() {
     alert('账号已注销');
     handleLogout();
 }
+
+/* --- 数字排序功能 --- */
+let uploadedFile = null;
+let sortedResult = null;
+let extractedNumbers = [];
+let originalFileName = '';
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        processFile(files[0]);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        });
+    }
+});
+
+function processFile(file) {
+    const allowedExts = ['.txt', '.csv', '.xlsx', '.xls', '.doc', '.docx'];
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+
+    if (!allowedExts.includes(ext)) {
+        showSortError('不支持的文件格式。请上传: .txt, .csv, .xlsx, .xls, .doc, .docx');
+        return;
+    }
+
+    uploadedFile = file;
+    originalFileName = file.name;
+    document.getElementById('file-name').innerText = '已选择: ' + file.name;
+    document.getElementById('sort-btn').disabled = false;
+    hideSortError();
+}
+
+async function handleSort() {
+    if (!uploadedFile) return;
+
+    const sortOrder = document.querySelector('input[name="sort-order"]:checked').value;
+    const formData = new FormData();
+    formData.append('file', uploadedFile);
+    formData.append('order', sortOrder);
+
+    showSortProgress();
+    hideSortError();
+    hideSortResult();
+    hideOriginalPreview();
+
+    try {
+        const response = await fetch('/cgi-bin/upload.py', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('服务器错误: ' + response.status);
+        }
+
+        const result = await response.json();
+
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
+        extractedNumbers = result.numbers;
+        sortedResult = result.sorted_numbers;
+
+        showOriginalPreview();
+        showSortResult();
+    } catch (err) {
+        showSortError('处理失败: ' + err.message);
+    } finally {
+        hideSortProgress();
+    }
+}
+
+function showOriginalPreview() {
+    const preview = document.getElementById('original-preview');
+    const count = document.getElementById('original-count');
+    const numbers = document.getElementById('original-numbers');
+
+    count.innerText = '共提取 ' + extractedNumbers.length + ' 个数字';
+    numbers.innerText = extractedNumbers.join(', ');
+    preview.classList.remove('hidden');
+}
+
+function showSortResult() {
+    const result = document.getElementById('sort-result');
+    const count = document.getElementById('sorted-count');
+    const numbers = document.getElementById('sorted-numbers');
+
+    count.innerText = '排序完成，共 ' + sortedResult.length + ' 个数字';
+    numbers.innerText = sortedResult.join(', ');
+    result.classList.remove('hidden');
+}
+
+function hideSortResult() {
+    document.getElementById('sort-result').classList.add('hidden');
+}
+
+function hideOriginalPreview() {
+    document.getElementById('original-preview').classList.add('hidden');
+}
+
+function showSortProgress() {
+    document.getElementById('sort-progress').classList.remove('hidden');
+    document.getElementById('sort-btn').disabled = true;
+}
+
+function hideSortProgress() {
+    document.getElementById('sort-progress').classList.add('hidden');
+    document.getElementById('sort-btn').disabled = !uploadedFile;
+}
+
+function showSortError(msg) {
+    const err = document.getElementById('error-message');
+    err.innerText = msg;
+    err.classList.remove('hidden');
+}
+
+function hideSortError() {
+    document.getElementById('error-message').classList.add('hidden');
+}
+
+function handleClear() {
+    uploadedFile = null;
+    sortedResult = null;
+    extractedNumbers = [];
+    originalFileName = '';
+
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) fileInput.value = '';
+    document.getElementById('file-name').innerText = '';
+    document.getElementById('sort-btn').disabled = true;
+
+    hideSortError();
+    hideSortResult();
+    hideOriginalPreview();
+}
+
+function handleDownload() {
+    if (!sortedResult) return;
+
+    const ext = originalFileName ? ('.' + originalFileName.split('.').pop().toLowerCase()) : '.txt';
+    const baseName = originalFileName ? originalFileName.replace(/\.[^.]+$/, '') : 'sorted';
+    const downloadFileName = baseName + '_sorted' + ext;
+
+    let content;
+    if (ext === '.csv') {
+        content = sortedResult.join(',');
+    } else {
+        content = sortedResult.join('\n');
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = downloadFileName;
+    a.click();
+    URL.revokeObjectURL(url);
+}
