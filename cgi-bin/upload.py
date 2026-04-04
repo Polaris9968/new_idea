@@ -35,12 +35,12 @@ def main():
             order = 'asc'
 
         # 获取上传文件
-        file_item = form.getvalue('file')
-        if not file_item:
+        file_item = form['file']
+        if not file_item.filename:
             print(json.dumps({"error": "没有上传文件"}, ensure_ascii=False))
             return
 
-        filename = file_item.filename or 'upload'
+        filename = file_item.filename
         ext = '.' + filename.split('.')[-1].lower() if '.' in filename else ''
 
         if ext not in ALLOWED_EXTENSIONS:
@@ -54,11 +54,8 @@ def main():
         with tempfile.NamedTemporaryFile(mode='wb', delete=False,
                                           suffix=ext, dir=UPLOAD_DIR) as f:
             temp_path = f.name
-            # file_item 是 FieldStorage 的文件对象，需要用 .file 读取
-            if hasattr(file_item, 'file'):
-                content = file_item.file.read()
-            else:
-                content = file_item
+            # file_item 是 FieldStorage 的文件对象，用 .file.read() 读取内容
+            content = file_item.file.read()
             f.write(content)
 
         try:
